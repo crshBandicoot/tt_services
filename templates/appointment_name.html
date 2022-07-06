@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<form action="appointment_list" method="get">
+    {{form|crispy}}
+    <input type="submit" value="Submit">
+</form>
+{% endblock content %}

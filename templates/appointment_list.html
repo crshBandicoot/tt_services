@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% for object in object_list %}
+<div class="appointment_list">
+<p>{{object.client}}</p>
+<p>{{object.worker}}</p>
+<p>{{object.start}}</p>
+</div>
+{% endfor %}
+{% endblock content %}
