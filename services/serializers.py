@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import *
 from rest_framework.exceptions import ValidationError
 from django.db.models import Q
+from datetime import datetime, timedelta
 
 class SpecializationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,31 +22,20 @@ class WorkerSerializer(serializers.ModelSerializer):
 class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
-        fields = ('id', 'client', 'date', 'start', 'end', 'worker')
+        fields = ('id', 'date', 'start', 'end', 'worker')
 
     def create(self, validated_data):
         worker = validated_data.get('worker')
         date = validated_data.get('date')
         start_appointment = validated_data.get('start')
         end_appointment = validated_data.get('end')
-        job_start = worker.job_start
-        job_end = worker.job_end
-        
-        if validated_data.get('start') < job_start or validated_data.get('end') > job_end:
-            raise ValidationError('Out of working hours!')
-
-        appointments = Schedule.objects.order_by('start').filter(worker=worker).filter(date=date)
-        busy = []
-        for appointment in appointments:
+        schedule = Schedule.objects.order_by('start').filter(worker=worker).filter(date=date)
+        for appointment in schedule:
             start, end = appointment.start, appointment.end
-            busy.append((start, end))
-        for i in busy:
-            if start_appointment >= i[0] and start_appointment <= i[1]:
+            if start_appointment >= start and start_appointment <= end_appointment:
                 raise ValidationError('Busy time!')
-        for i in busy:
-            if end_appointment >= i[0] and end_appointment <= i[1]:
+            if end_appointment >= end and end_appointment <= end:
                 raise ValidationError('Busy time!')
-
         return Schedule.objects.create(**validated_data)
     
     def update(self, instance, validated_data):
@@ -53,23 +43,38 @@ class ScheduleSerializer(serializers.ModelSerializer):
         date = validated_data.get('date')
         start_appointment = validated_data.get('start')
         end_appointment = validated_data.get('end')
-        job_start = worker.job_start
-        job_end = worker.job_end
-        if validated_data.get('start') < job_start or validated_data.get('end') > job_end:
-            raise ValidationError('Out of working hours!')
-
-        appointments = Schedule.objects.order_by('start').filter(worker=worker).filter(date=date).filter(~Q(id=instance.id))
-        busy = []
-        for appointment in appointments:
+        schedule = Schedule.objects.order_by('start').filter(worker=worker).filter(date=date).filter(~Q(id=instance.id))
+        for appointment in schedule:
             start, end = appointment.start, appointment.end
-            busy.append((start, end))
-        for i in busy:
-            if start_appointment >= i[0] and start_appointment <= i[1]:
+            if start_appointment >= start and start_appointment <= end_appointment:
                 raise ValidationError('Busy time!')
-        for i in busy:
-            if end_appointment >= i[0] and end_appointment <= i[1]:
+            if end_appointment >= end and end_appointment <= end:
                 raise ValidationError('Busy time!')
-
         return super().update(instance, validated_data)
         
+
+class AppointmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Appointment
+        fields = ('id', 'client', 'date', 'start', 'procedure')
+
+    def create(self, validated_data):
+        date = validated_data.get('date')
+        start_appointment = validated_data.get('start')
+        procedure = validated_data.get('procedure')
+
+        worker = Worker.objects.get(specialization=procedure)
+        start_date = datetime(1,1,1, start_appointment.hour, start_appointment.minute)
+        end_appointment = (start_date + timedelta(hours=1)).time()
+        schedule = Schedule.objects.order_by('start').filter(worker=worker).filter(date=date)
+
+        for appointment in schedule:
+            start, end = appointment.start, appointment.end
+            if start_appointment >= start and start_appointment <= end_appointment:
+                raise ValidationError('Busy time!')
+            if end_appointment >= end and end_appointment <= end:
+                raise ValidationError('Busy time!')
+
+        Schedule.objects.create(worker=worker, date=date, start=start_appointment, end=end_appointment)
+        return Appointment.objects.create(**validated_data)
     

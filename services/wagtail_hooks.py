@@ -14,6 +14,7 @@ class WorkerAdmin(ModelAdmin):
     add_to_settings_menu = False
     exclude_from_explorer = False
     menu_order = 100
+    search_fields = ('name',)
 
 class ScheduleAdmin(ModelAdmin):
     model = Schedule
@@ -21,6 +22,7 @@ class ScheduleAdmin(ModelAdmin):
     add_to_settings_menu = False
     exclude_from_explorer = False
     menu_order = 100
+    search_fields = ('date',)
 
 class SpecializationAdmin(ModelAdmin):
     model = Specialization
@@ -29,10 +31,19 @@ class SpecializationAdmin(ModelAdmin):
     exclude_from_explorer = False
     menu_order = 100
 
+class AppointmentAdmin(ModelAdmin):
+    model = Appointment
+    menu_label = 'Appointments'
+    add_to_settings_menu = False
+    exclude_from_explorer = False
+    menu_order = 100
+    search_fields = ('client', 'date')
+
 
 
 
 modeladmin_register(ScheduleAdmin)
+modeladmin_register(AppointmentAdmin)
 modeladmin_register(WorkerAdmin)
 modeladmin_register(LocationAdmin)
 modeladmin_register(SpecializationAdmin)

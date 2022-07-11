@@ -18,6 +18,9 @@ urlpatterns = [
     path('api/specializations/', SpecializationsAPIView.as_view(), name='specializationsAPI'),
     path('api/specializations/<int:pk>', SpecializationsAPIView.as_view(), name='specializationsAPI'),
 
+    path('api/appointments/', AppointmentsAPIView.as_view(), name='appointmentsAPI'),
+    path('api/appointments/<int:pk>', AppointmentsAPIView.as_view(), name='appointmentsAPI'),
+
     path('', toHome, name='redirect_home'),
     path('home', HomeView.as_view(), name='home'),
     path('new_appointment', NewAppointment.as_view(), name='new_appointment'),

@@ -31,7 +31,7 @@ class AppointmentList(ListView):
         template = loader.get_template(template_name)
         name = request.GET.get('name')
         next = request.GET.get('next', None)
-        queryset = Schedule.objects.filter(client=name)
+        queryset = Appointment.objects.filter(client=name)
         if next:
             queryset = queryset.filter(start__gte=datetime.now())
         context = {'object_list': queryset}
@@ -42,13 +42,27 @@ class NewAppointment(FormView):
     template_name = 'appointment_form.html'
     success_url = reverse_lazy('home')
     def form_valid(self, form):
-        start = form.data['start']
-        hours = start[0:2]
-        minutes = start[2:6]
-        hours = (int(hours)+1)%24
-        end = str(hours)+minutes
-        worker = Worker.objects.get(id=form.data['worker'])
-        appointment = Schedule.objects.create(worker=worker, client=form.data['client'], date=form.data['date'], start=form.data['start'], end=end)
+        client = form.data['client']
+        date = form.data['date']
+        start_appointment = form.data['start']
+        start_appointment = datetime.strptime(start_appointment, '%H:%M').time()
+        procedure = form.data['procedure']
+        procedure = Specialization.objects.get(id=procedure)
+        worker = Worker.objects.get(specialization=procedure)
+
+        start_date = datetime(1,1,1, start_appointment.hour, start_appointment.minute)
+        end_appointment = (start_date + timedelta(hours=1)).time()
+        schedule = Schedule.objects.order_by('start').filter(worker=worker).filter(date=date)
+        
+        for appointment in schedule:
+            start, end = appointment.start, appointment.end
+            if start_appointment >= start and start_appointment <= end_appointment:
+                return HttpResponse('Busy time! Appointment not created!<br><a href="home">Go back to mainpage</a>')
+            if end_appointment >= end and end_appointment <= end:
+                return HttpResponse('Busy time! Appointment not created!<br><a href="home">Go back to mainpage</a>')
+        Schedule.objects.create(worker=worker, date=date, start=start_appointment, end=end_appointment)
+        
+        Appointment.objects.create(client=client, date=date, start=start_appointment, procedure=procedure)
         return HttpResponse('Succesful!<br><a href="home">Go back to mainpage</a>')
 
 class SpecializationsAPIView(views.APIView):
@@ -212,30 +226,19 @@ class ScheduleAPIView(views.APIView):
 
     def get(self, request, **kwargs):
         pk = kwargs.get('pk', None)
-        if pk:
-            queryset = Schedule.objects.filter(id=pk)
-            return restResponse(ScheduleSerializer(queryset, many=True).data)
-
-        client =  request.GET.get('client', None)
-        if client:
-            queryset = Schedule.objects.filter(client=client)
-            return restResponse(ScheduleSerializer(queryset, many=True).data)
-
         date =  request.GET.get('date', None)
+        worker =  request.GET.get('worker', None)
+        queryset = Schedule.objects.all().order_by('date', 'start')
+        if pk:
+            queryset = queryset.get(id=pk)
+            return restResponse(ScheduleSerializer(queryset).data)
+        
         if date:
-            date = datetime.strptime(date, '%m-%d-%Y').date()
-            queryset = Schedule.objects.order_by('start').filter(date=date)
-            return restResponse(ScheduleSerializer(queryset, many=True).data)
-
-        client = request.GET.get('client', None)
-        if client:
-            next = request.GET.get('next', None)
-            if next:
-                pass
-            queryset = Schedule.objects.filter(client=client)
-            return restResponse(ScheduleSerializer(queryset, many=True).data)
-
-        queryset = Schedule.objects.all().order_by('start')
+            date = datetime.strptime(date, '%Y-%m-%d').date()
+            queryset = queryset.filter(date=date)
+            
+        if worker:
+            queryset = queryset.filter(worker=worker)
         return restResponse(ScheduleSerializer(queryset, many=True).data)
         
     def post(self, request):
@@ -264,6 +267,43 @@ class ScheduleAPIView(views.APIView):
             return restResponse({'Error: ': 'DELETE not allowed without PK!'})
         try:
             instance = Schedule.objects.get(id=pk)
+        except:
+            return restResponse({'Error: ': 'Entry not found!'})
+        instance.delete()
+        return restResponse({'DELETE: ': pk})
+
+
+class AppointmentsAPIView(views.APIView):
+
+    def get(self, request, **kwargs):
+        pk = kwargs.get('pk', None)
+        date =  request.GET.get('date', None)
+        procedure =  request.GET.get('procedure', None)
+        queryset = Appointment.objects.all().order_by('date', 'start')
+        if pk:
+            queryset = queryset.get(id=pk)
+            return restResponse(AppointmentSerializer(queryset).data)
+        
+        if date:
+            date = datetime.strptime(date, '%Y-%m-%d').date()
+            queryset = queryset.filter(date=date)
+            
+        if procedure:
+            queryset = queryset.filter(procedure=procedure)
+        return restResponse(AppointmentSerializer(queryset, many=True).data)
+        
+    def post(self, request):
+        serializer = AppointmentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return restResponse({'POST': serializer.data})
+
+    def delete(self, request, **kwargs):
+        pk = kwargs.get('pk', None)
+        if not pk:
+            return restResponse({'Error: ': 'DELETE not allowed without PK!'})
+        try:
+            instance = Appointment.objects.get(id=pk)
         except:
             return restResponse({'Error: ': 'Entry not found!'})
         instance.delete()
