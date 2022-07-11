@@ -9,10 +9,6 @@ class SpecializationSerializer(serializers.ModelSerializer):
         model = Specialization
         fields = '__all__'
 
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = '__all__'
 
 class WorkerSerializer(serializers.ModelSerializer):
     class Meta:
