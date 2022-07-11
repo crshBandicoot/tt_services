@@ -5,6 +5,11 @@ class Specialization(models.Model):
     def __str__(self):
         return self.name
 
+class Location(models.Model):
+    name = models.CharField(max_length=255)
+    def __str__(self):
+        return self.name
+
 
 class Worker(models.Model):
     name = models.CharField(max_length=255)
@@ -17,6 +22,7 @@ class Schedule(models.Model):
     date = models.DateField()
     start = models.TimeField()
     end = models.TimeField()
+    location = models.ForeignKey(Location, null=True, on_delete=models.SET_NULL)
     def __str__(self):
         return self.date.strftime('%d %b %Y') + self.start.strftime(' %H:%M') + self.end.strftime('-%H:%M ') + self.worker.name
 

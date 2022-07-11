@@ -33,6 +33,13 @@ class AppointmentAdmin(ModelAdmin):
     menu_order = 100
     search_fields = ('client', 'date')
 
+class LocationAdmin(ModelAdmin):
+    model = Location
+    menu_label = 'Locations'
+    add_to_settings_menu = False
+    exclude_from_explorer = False
+    menu_order = 100
+
 
 
 
@@ -40,3 +47,4 @@ modeladmin_register(ScheduleAdmin)
 modeladmin_register(AppointmentAdmin)
 modeladmin_register(WorkerAdmin)
 modeladmin_register(SpecializationAdmin)
+modeladmin_register(LocationAdmin)

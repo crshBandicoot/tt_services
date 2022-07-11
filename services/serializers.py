@@ -15,6 +15,11 @@ class WorkerSerializer(serializers.ModelSerializer):
         model = Worker
         fields = '__all__'
 
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = '__all__'
+
 class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
@@ -23,9 +28,10 @@ class ScheduleSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         worker = validated_data.get('worker')
         date = validated_data.get('date')
+        location = validated_data.get('location')
         start_appointment = validated_data.get('start')
         end_appointment = validated_data.get('end')
-        schedule = Schedule.objects.order_by('start').filter(worker=worker).filter(date=date)
+        schedule = Schedule.objects.order_by('start').filter(worker=worker).filter(date=date).filter(location=location)
         for appointment in schedule:
             start, end = appointment.start, appointment.end
             if start_appointment >= start and start_appointment <= end_appointment:
@@ -37,9 +43,10 @@ class ScheduleSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         worker = instance.worker
         date = validated_data.get('date')
+        location = validated_data.get('location')
         start_appointment = validated_data.get('start')
         end_appointment = validated_data.get('end')
-        schedule = Schedule.objects.order_by('start').filter(worker=worker).filter(date=date).filter(~Q(id=instance.id))
+        schedule = Schedule.objects.order_by('start').filter(worker=worker).filter(date=date).filter(location=location).filter(~Q(id=instance.id))
         for appointment in schedule:
             start, end = appointment.start, appointment.end
             if start_appointment >= start and start_appointment <= end_appointment:
