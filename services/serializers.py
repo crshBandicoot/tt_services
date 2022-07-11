@@ -65,7 +65,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
         date = validated_data.get('date')
         start_appointment = validated_data.get('start')
         procedure = validated_data.get('procedure')
-
         worker = Worker.objects.get(specialization=procedure)
         start_date = datetime(1,1,1, start_appointment.hour, start_appointment.minute)
         end_appointment = (start_date + timedelta(hours=1)).time()
@@ -78,6 +77,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
             if end_appointment >= end and end_appointment <= end:
                 raise ValidationError('Busy time!')
 
-        Schedule.objects.create(worker=worker, date=date, start=start_appointment, end=end_appointment)
+        Schedule.objects.create(worker=worker, date=date, start=start_appointment, end=end_appointment, location=None)
         return Appointment.objects.create(**validated_data)
     
