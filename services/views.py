@@ -1,9 +1,4 @@
-from datetime import date, datetime, time
-from http import client
-from operator import ne
-from re import L, template
-from pytz import timezone
-from requests import delete
+from datetime import date, datetime
 from rest_framework.response import Response as restResponse
 from rest_framework import viewsets, generics, views
 from .serializers import *
