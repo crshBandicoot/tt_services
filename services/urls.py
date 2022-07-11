@@ -15,9 +15,6 @@ urlpatterns = [
     path('api/schedule/', ScheduleAPIView.as_view(), name='scheduleAPI'),
     path('api/schedule/<int:pk>', ScheduleAPIView.as_view(), name='scheduleAPI'),
 
-    path('api/specializations/', SpecializationsAPIView.as_view(), name='specializationsAPI'),
-    path('api/specializations/<int:pk>', SpecializationsAPIView.as_view(), name='specializationsAPI'),
-
     path('api/appointments/', AppointmentsAPIView.as_view(), name='appointmentsAPI'),
     path('api/appointments/<int:pk>', AppointmentsAPIView.as_view(), name='appointmentsAPI'),
 

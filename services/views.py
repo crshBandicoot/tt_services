@@ -46,12 +46,12 @@ class NewAppointment(FormView):
         date = form.data['date']
         start_appointment = form.data['start']
         start_appointment = datetime.strptime(start_appointment, '%H:%M').time()
-        procedure = form.data['procedure']
-        procedure = Specialization.objects.get(id=procedure)
-        worker = Worker.objects.get(specialization=procedure)
-
-        start_date = datetime(1,1,1, start_appointment.hour, start_appointment.minute)
-        end_appointment = (start_date + timedelta(hours=1)).time()
+        end_appointment = form.data['end']
+        end_appointment = datetime.strptime(end_appointment, '%H:%M').time()
+        worker = form.data['worker']
+        worker = Worker.objects.get(id=worker)
+        location = form.data['location']
+        location = Location.objects.get(id=location)
         schedule = Schedule.objects.order_by('start').filter(worker=worker).filter(date=date)
         
         for appointment in schedule:
@@ -60,51 +60,12 @@ class NewAppointment(FormView):
                 return HttpResponse('Busy time! Appointment not created!<br><a href="home">Go back to mainpage</a>')
             if end_appointment >= end and end_appointment <= end:
                 return HttpResponse('Busy time! Appointment not created!<br><a href="home">Go back to mainpage</a>')
-        Schedule.objects.create(worker=worker, date=date, start=start_appointment, end=end_appointment)
+        Schedule.objects.create(worker=worker, date=date, start=start_appointment, end=end_appointment, location=location)
         
-        Appointment.objects.create(client=client, date=date, start=start_appointment, procedure=procedure)
+        Appointment.objects.create(client=client, date=date, start=start_appointment, worker=worker, end=end_appointment)
         return HttpResponse('Succesful!<br><a href="home">Go back to mainpage</a>')
 
-class SpecializationsAPIView(views.APIView):
 
-    def get(self, request, **kwargs):
-        pk = kwargs.get('pk', None)
-        if pk:
-            queryset = Specialization.objects.filter(id=pk)
-            return restResponse(SpecializationSerializer(queryset, many=True).data)
-        queryset = Specialization.objects.all()
-        return restResponse(SpecializationSerializer(queryset, many=True).data)
-
-    def post(self, request):
-        serializer = SpecializationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return restResponse({'POST': serializer.data})
-    
-    def put(self, request, **kwargs):
-        pk = kwargs.get('pk', None)
-        if not pk:
-            return restResponse({'Error: ': 'PUT not allowed without PK!'})
-        try:
-            instance = Specialization.objects.get(id=pk)
-        except:
-            return restResponse({'Error: ': 'Entry not found!'})
-        
-        serializer = SpecializationSerializer(data=request.data, instance=instance)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return restResponse({'PUT': serializer.data})
-
-    def delete(self, request, **kwargs):
-        pk = kwargs.get('pk', None)
-        if not pk:
-            return restResponse({'Error: ': 'DELETE not allowed without PK!'})
-        try:
-            instance = Specialization.objects.get(id=pk)
-        except:
-            return restResponse({'Error: ': 'Entry not found!'})
-        instance.delete()
-        return restResponse({'DELETE: ': pk})
         
 class LocationsAPIView(views.APIView):
 

@@ -18,12 +18,7 @@ class ScheduleAdmin(ModelAdmin):
     menu_order = 100
     search_fields = ('date',)
 
-class SpecializationAdmin(ModelAdmin):
-    model = Specialization
-    menu_label = 'Specializations'
-    add_to_settings_menu = False
-    exclude_from_explorer = False
-    menu_order = 100
+
 
 class AppointmentAdmin(ModelAdmin):
     model = Appointment
@@ -46,5 +41,4 @@ class LocationAdmin(ModelAdmin):
 modeladmin_register(ScheduleAdmin)
 modeladmin_register(AppointmentAdmin)
 modeladmin_register(WorkerAdmin)
-modeladmin_register(SpecializationAdmin)
 modeladmin_register(LocationAdmin)
